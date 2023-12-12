@@ -1,7 +1,7 @@
 // Charles Nicholson, 2023
 // Code for a LoRa GPS tracker.
 // Meant to be used to track a high-altitude glider.
-// GITHUB GOES HERE
+// https://github.com/crnicholson/littleLoRa/tree/main
 
 // ***** NOTE *****
 // This system operates at 433 MHz, so a ham radio license is needed in the US.
