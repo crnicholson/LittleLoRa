@@ -1,7 +1,7 @@
 // Charles Nicholson, 2023
 // Code for a LoRa GPS tracker.
 // Meant to be used to track a high-altitude glider.
-// https://github.com/crnicholson/littleLoRa/tree/main
+// https://github.com/crnicholson/littleLoRa/.
 
 // ***** NOTE *****
 // This system operates at 433 MHz, so a ham radio license is needed in the US.
@@ -28,9 +28,9 @@
 
 // ***** SAMD21G18A Low Power *****
 // The SAMD goes to sleep to save power. This is implmented using the ArduinoLowPower library.
-// With the LoRa, MCU, and ublox in sleep, plus the MCP1700 voltage regulator, the current draw can be as low as 280 uA while retaining function. 
+// With the LoRa, MCU, and ublox in sleep, plus the MCP1700 voltage regulator, the current draw can be as low as 280 uA while retaining function.
 // To achieve proper sleep, some edits to the SAMD core are neccesary. To find the wiring.c file on your computer, follow this guide:
-// https://support.arduino.cc/hc/en-us/articles/4415103213714-Find-sketches-libraries-board-cores-and-other-files-on-your-computer. 
+// https://support.arduino.cc/hc/en-us/articles/4415103213714-Find-sketches-libraries-board-cores-and-other-files-on-your-computer.
 // Once there, comment out this line as shown:
 /*
   // Setup all pins (digital and analog) in INPUT mode (default is nothing)
@@ -80,10 +80,10 @@ struct __attribute__((packed)) dataStruct {
   long speed;
   long course;
   long txCount = 0;
-  char text[50] = comment;
+  char text[COMMENT_SIZE] = COMMENT;
 } transmittingData;
 
-#ifdef testCoord
+#ifdef TEST_COORD
 float lat = 42.316651;
 float lon = -71.366030;
 int alt = 96;
@@ -95,35 +95,39 @@ int course = 360;
 SFE_UBLOX_GNSS gps;
 
 void setup() {
-  pinMode(wakeupPin, OUTPUT);
-  digitalWrite(wakeupPin, LOW);
+  pinMode(WAKEUP_PIN, OUTPUT);
+  digitalWrite(WAKEUP_PIN, LOW);
 
-#ifdef devMode
-  SerialUSB.begin(baudRate);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
+  longPulse();  // Pulse LED to show that power is supplied.
+
+#ifdef DEVMODE
+  SerialUSB.begin(BAUD_RATE);
   while (!SerialUSB)
     ;  // Wait until SerialUSB is all good.
-  SerialUSB.println("LoRa Tracker v2.1");
+  SerialUSB.println("LoRa Tracker v3.1");
 #endif
 
-  LoRa.setPins(ssPin, resetPin, DIO0Pin);  // SS, reset, and DIO0. Has to be before LoRa.begin().
+  LoRa.setPins(SS_PIN, RESET_PIN, DIO0_PIN);  // SS, reset, and DIO0. Has to be before LoRa.begin().
 
-  if (!LoRa.begin(frequency)) {
-#ifdef devMode
+  if (!LoRa.begin(FREQUENCY)) {
+#ifdef DEVMODE
     SerialUSB.println("Starting LoRa failed!");
 #endif
     while (1)
       ;
   }
 
-  LoRa.setSyncWord(syncWord);
-  LoRa.setSpreadingFactor(spreadingFactor);
-  LoRa.setSignalBandwidth(bandwidth);
-  LoRa.crc();
+  LoRa.setSyncWord(SYNC_WORD);                // Defined in settings.h.
+  LoRa.setSpreadingFactor(SPREADING_FACTOR);  // Defined in settings.h
+  LoRa.setSignalBandwidth(BANDWIDTH);         // Defined in settings.h.
+  LoRa.crc();                                 // Get a checksum.
 
   Wire.begin();
 
   if (gps.begin() == false) {  // Connect to the u-blox module using Wire port.
-#ifdef devMode
+#ifdef DEVMODE
     SerialUSB.println(F("u-blox GNSS not detected at default I2C address. Please check wiring. Freezing."));
 #endif
     while (1)
@@ -142,25 +146,65 @@ void setup() {
   gps.hardReset();  // Hard reset - force a cold start
   */
 
-  gpsConfig();
+  gpsConfig();  // This doesn't work right now. It is currently getting worked on. The sketch won't work well or at all until this is fixed.
 
-  // Wait for 5 seconds
-#ifdef devMode
-  SerialUSB.println("Waiting for 10 seconds before loop.");
-#endif
-  for (int i = 0; i < 10; i++) {
-    delay(1000);
-#ifdef devMode
-    SerialUSB.print(".");
-#endif
+  uint8_t PSM;
+
+  if (gps.getVal8(UBLOX_CFG_PM_OPERATEMODE, &PSM) == true) {  // Test if the GPS config worked correctly.
+    SerialUSB.print("Power save mode: ");
+    SerialUSB.println(PSM);
+  } else {
+    SerialUSB.print("VALGET failed!");
   }
-#ifdef devMode
-  SerialUSB.println();
+
+#ifndef TEST_COORD
+  int fixType = 0;
+  int sats = 0;
+  while ((fixType < 3) && (sats < 5)) {  // This is neccesary to make sure data is valid before the GPS sleep.
+    if (gps.getPVT()) {
+      fixType = gps.getFixType();
+      sats = gps.getSIV();
+#ifdef DEVMODE
+      displayData();
+      SerialUSB.print("Fix type: ");
+      SerialUSB.print(fixType);
+      SerialUSB.print(" Satellites: ");
+      SerialUSB.println(sats);
+#endif
+    } else {
+      SerialUSB.println("No PVT data received. Retrying...");
+    }
+  }
+#endif
+
+#ifdef TEST_COORD
+  delay(10000);
 #endif
 }
 
 void loop() {
-#ifdef testCoord
+  shortPulse();
+#ifndef TEST_COORD
+  int fixType = 0;
+  int sats = 0;
+  while ((fixType < 3) && (sats < 5)) {  // Make sure location is valid from wakeup before obtaining coordinates.
+    if (gps.getPVT()) {
+      fixType = gps.getFixType();
+      sats = gps.getSIV();
+#ifdef DEVMODE
+      displayData();
+      SerialUSB.print(" Fix type: ");
+      SerialUSB.print(fixType);
+      SerialUSB.print(" Satellites: ");
+      SerialUSB.println(sats);
+#endif
+    } else {
+      SerialUSB.println("No PVT data received. Retrying...");
+    }
+  }
+#endif
+
+#ifdef TEST_COORD
   transmittingData.lat = lat;
   transmittingData.lon = lon;
   transmittingData.alt = alt;
@@ -170,7 +214,7 @@ void loop() {
   transmittingData.txCount++;
 #endif
 
-#ifndef testCoord
+#ifndef TEST_COORD
   if (gps.getPVT()) {
     transmittingData.lat = gps.getLatitude();
     transmittingData.lon = gps.getLongitude();
@@ -185,23 +229,8 @@ void loop() {
   }
 #endif
 
-#ifdef devMode
-  SerialUSB.print("Lat: ");
-  SerialUSB.print(transmittingData.lat, 9);
-  SerialUSB.print(" Lon: ");
-  SerialUSB.print(transmittingData.lon, 9);
-  SerialUSB.print(" Date/Time: ");
-  SerialUSB.print(gps.getYear());
-  SerialUSB.print("-");
-  SerialUSB.print(gps.getMonth());
-  SerialUSB.print("-");
-  SerialUSB.print(gps.getDay());
-  SerialUSB.print(" ");
-  SerialUSB.print(gps.getHour());
-  SerialUSB.print(":");
-  SerialUSB.print(gps.getMinute());
-  SerialUSB.print(":");
-  SerialUSB.println(gps.getSecond());
+#ifdef DEVMODE
+  displayData();
   SerialUSB.println("Entering GPS low power mode.");
 #endif
 
@@ -211,24 +240,22 @@ void loop() {
   // powerOffWithInterrupt uses the 16-byte version of RXM-PMREQ - supported by the M10 etc.
   // powerOffWithInterrupt allows us to set the force flag. The M10 integration manual states:
   // "The "force" flag must be set in UBX-RXM-PMREQ to enter software standby mode."
-  gps.powerOffWithInterrupt(30000, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true);  // No (additional) wakeup sources. force = true
+  gps.powerOffWithInterrupt(30000, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true);  // No (additional) wakeup sources. force = true.
 
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.print("Transmitting with a packet size of: ");
   SerialUSB.println(sizeof(transmittingData));
 #endif
   long beforeTransmit = millis();
   transmit(transmittingData);  // This is blocking and takes a tad bit more than 6.75 seconds. Make this non-blocking if you wish to here: https://github.com/sandeepmistry/arduino-LoRa/blob/7c2ebfd0d839582309c43eb464be84b563459da9/examples/LoRaSenderNonBlocking/LoRaSenderNonBlocking.ino#L10.
   long afterTransmit = millis();
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.print("Done transmitting. Time took: ");
   SerialUSB.print(afterTransmit - beforeTransmit);
   SerialUSB.println(" milliseconds. Now sleeping LoRa and sleeping MCU.");
 #endif
   LoRa.sleep();  // The LoRa module wakes up automatically when the SPI interface is active.
-  LowPower.deepSleep(sleepTime);
-  delay(250);   // Let the proccesor wake up a bit.
-  gpsWakeup();  // Wakeup GPS to get a quick fix.
-  SerialUSB.println("GPS is awake. MCU is going back to sleep.");
-  LowPower.deepSleep(1000);
+  LowPower.deepSleep(SLEEP_TIME);
+  gpsWakeup();  // Wakeup GPS.
+  SerialUSB.println("GPS and MCU are awake.");
 }
