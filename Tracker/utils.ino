@@ -1,32 +1,54 @@
 #include <Arduino.h>
 
-void printGPSData() {
-  if (gps.getPVT()) {
-    Serial.print("Lat: ");
-    Serial.print(gps.getLatitude());
-    Serial.print(" Lon: ");
-    Serial.print(gps.getLongitude());
-    Serial.print(" Date/Time: ");
-    Serial.print(gps.getYear());
-    Serial.print("-");
-    Serial.print(gps.getMonth());
-    Serial.print("-");
-    Serial.print(gps.getDay());
-    Serial.print(" ");
-    Serial.print(gps.getHour());
-    Serial.print(":");
-    Serial.print(gps.getMinute());
-    Serial.print(":");
-    Serial.println(gps.getSecond());
-  }
+void longPulse() {
+  digitalWrite(LED, HIGH);
+  delay(250);
+  digitalWrite(LED, LOW);
+  delay(500);
+  digitalWrite(LED, HIGH);
+  delay(250);
+  digitalWrite(LED, LOW);
+}
+
+void shortPulse() {
+  digitalWrite(LED, HIGH);
+  delay(250);
+  digitalWrite(LED, LOW);
+}
+
+void displayData() {
+  float lat = gps.getLatitude();
+  lat = lat / 10000000;
+  float lon = gps.getLongitude();
+  lon = lon / 10000000;
+  long alt = gps.getAltitude();
+  alt = alt / 1000;
+  SerialUSB.print("Lat: ");
+  SerialUSB.print(lat, 9);
+  SerialUSB.print(" Lon: ");
+  SerialUSB.print(lon, 9);
+  SerialUSB.print(" Alt: ");
+  SerialUSB.print(alt);
+  SerialUSB.print(" Date/Time: ");
+  SerialUSB.print(gps.getYear());
+  SerialUSB.print("-");
+  SerialUSB.print(gps.getMonth());
+  SerialUSB.print("-");
+  SerialUSB.print(gps.getDay());
+  SerialUSB.print(" ");
+  SerialUSB.print(gps.getHour());
+  SerialUSB.print(":");
+  SerialUSB.print(gps.getMinute());
+  SerialUSB.print(":");
+  SerialUSB.println(gps.getSecond());
 }
 
 void gpsWakeup() {
-  digitalWrite(wakeupPin, LOW);
+  digitalWrite(WAKEUP_PIN, LOW);
   delay(1000);
-  digitalWrite(wakeupPin, HIGH);
+  digitalWrite(WAKEUP_PIN, HIGH);
   delay(1000);
-  digitalWrite(wakeupPin, LOW);
+  digitalWrite(WAKEUP_PIN, LOW);
 }
 
 void sendI2CData(byte data[]) {
@@ -47,7 +69,7 @@ void gpsSleep() {
 }
 */
 
-void gpsConfig() {
+void gpsConfig() {  // Config may be better done with the Sparkfun command VALSET. Maybe another time.
   byte data1[] = { 0xB5, 0x62, 0x06, 0x8A, 0x09, 0x00, 0x01, 0x01, 0x00, 0x00, 0x18, 0x00, 0x31, 0x10, 0x01, 0xF5, 0x66 };
   byte data2[] = { 0xB5, 0x62, 0x06, 0x8A, 0x09, 0x00, 0x01, 0x02, 0x00, 0x00, 0x18, 0x00, 0x31, 0x10, 0x01, 0xF6, 0x6E };
   byte data3[] = { 0xB5, 0x62, 0x06, 0x8A, 0x09, 0x00, 0x01, 0x01, 0x00, 0x00, 0x21, 0x00, 0x31, 0x10, 0x00, 0xFD, 0x92 };
@@ -105,5 +127,5 @@ void transmit(const struct __attribute__((packed)) dataStruct &data) {
   // Send the packet over LoRa.
   LoRa.beginPacket();
   LoRa.write((byte *)&data, sizeof(data));
-  LoRa.endPacket(); 
+  LoRa.endPacket();
 }
