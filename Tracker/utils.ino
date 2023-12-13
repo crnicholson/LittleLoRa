@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 void printGPSData() {
   if (gps.getPVT()) {
     Serial.print("Lat: ");
@@ -22,11 +20,11 @@ void printGPSData() {
 }
 
 void gpsWakeup() {
-  digitalWrite(wakeupPin, LOW);
+  digitalWrite(WAKEUP_PIN, LOW);
   delay(1000);
-  digitalWrite(wakeupPin, HIGH);
+  digitalWrite(WAKEUP_PIN, HIGH);
   delay(1000);
-  digitalWrite(wakeupPin, LOW);
+  digitalWrite(WAKEUP_PIN, LOW);
 }
 
 void sendI2CData(byte data[]) {

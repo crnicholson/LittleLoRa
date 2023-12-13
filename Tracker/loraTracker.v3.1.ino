@@ -83,7 +83,7 @@ struct __attribute__((packed)) dataStruct {
   char text[50] = comment;
 } transmittingData;
 
-#ifdef testCoord
+#ifdef STATIC_COORD
 float lat = 42.316651;
 float lon = -71.366030;
 int alt = 96;
@@ -95,35 +95,35 @@ int course = 360;
 SFE_UBLOX_GNSS gps;
 
 void setup() {
-  pinMode(wakeupPin, OUTPUT);
-  digitalWrite(wakeupPin, LOW);
+  pinMode(WAKEUP_PIN, OUTPUT);
+  digitalWrite(WAKEUP_PIN, LOW);
 
-#ifdef devMode
-  SerialUSB.begin(baudRate);
+#ifdef DEVMODE
+  SerialUSB.begin(BAUD_RATE);
   while (!SerialUSB)
     ;  // Wait until SerialUSB is all good.
   SerialUSB.println("LoRa Tracker v2.1");
 #endif
 
-  LoRa.setPins(ssPin, resetPin, DIO0Pin);  // SS, reset, and DIO0. Has to be before LoRa.begin().
+  LoRa.setPins(SS_PIN, RST_PIN, DIO0PIN);  // SS, reset, and DIO0. Has to be before LoRa.begin().
 
-  if (!LoRa.begin(frequency)) {
-#ifdef devMode
+  if (!LoRa.begin(FREQ)) {
+#ifdef DEVMODE
     SerialUSB.println("Starting LoRa failed!");
 #endif
     while (1)
       ;
   }
 
-  LoRa.setSyncWord(syncWord);
-  LoRa.setSpreadingFactor(spreadingFactor);
-  LoRa.setSignalBandwidth(bandwidth);
+  LoRa.setSyncWord(SYNC_WORD);
+  LoRa.setSpreadingFactor(SPREADING_FACTOR);
+  LoRa.setSignalBandwidth(BANDWIDTH);
   LoRa.crc();
 
   Wire.begin();
 
   if (gps.begin() == false) {  // Connect to the u-blox module using Wire port.
-#ifdef devMode
+#ifdef DEVMODE
     SerialUSB.println(F("u-blox GNSS not detected at default I2C address. Please check wiring. Freezing."));
 #endif
     while (1)
@@ -145,22 +145,22 @@ void setup() {
   gpsConfig();
 
   // Wait for 5 seconds
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.println("Waiting for 10 seconds before loop.");
 #endif
   for (int i = 0; i < 10; i++) {
     delay(1000);
-#ifdef devMode
+#ifdef DEVMODE
     SerialUSB.print(".");
 #endif
   }
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.println();
 #endif
 }
 
 void loop() {
-#ifdef testCoord
+#ifdef STATIC_COORD
   transmittingData.lat = lat;
   transmittingData.lon = lon;
   transmittingData.alt = alt;
@@ -170,7 +170,7 @@ void loop() {
   transmittingData.txCount++;
 #endif
 
-#ifndef testCoord
+#ifndef STATIC_COORD
   if (gps.getPVT()) {
     transmittingData.lat = gps.getLatitude();
     transmittingData.lon = gps.getLongitude();
@@ -185,7 +185,7 @@ void loop() {
   }
 #endif
 
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.print("Lat: ");
   SerialUSB.print(transmittingData.lat, 9);
   SerialUSB.print(" Lon: ");
@@ -213,14 +213,14 @@ void loop() {
   // "The "force" flag must be set in UBX-RXM-PMREQ to enter software standby mode."
   gps.powerOffWithInterrupt(30000, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true);  // No (additional) wakeup sources. force = true
 
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.print("Transmitting with a packet size of: ");
   SerialUSB.println(sizeof(transmittingData));
 #endif
   long beforeTransmit = millis();
   transmit(transmittingData);  // This is blocking and takes a tad bit more than 6.75 seconds. Make this non-blocking if you wish to here: https://github.com/sandeepmistry/arduino-LoRa/blob/7c2ebfd0d839582309c43eb464be84b563459da9/examples/LoRaSenderNonBlocking/LoRaSenderNonBlocking.ino#L10.
   long afterTransmit = millis();
-#ifdef devMode
+#ifdef DEVMODE
   SerialUSB.print("Done transmitting. Time took: ");
   SerialUSB.print(afterTransmit - beforeTransmit);
   SerialUSB.println(" milliseconds. Now sleeping LoRa and sleeping MCU.");
