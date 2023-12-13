@@ -226,7 +226,7 @@ void loop() {
   SerialUSB.println(" milliseconds. Now sleeping LoRa and sleeping MCU.");
 #endif
   LoRa.sleep();  // The LoRa module wakes up automatically when the SPI interface is active.
-  LowPower.deepSleep(sleepTime);
+  LowPower.deepSleep(SLEEP_TIME);
   delay(250);   // Let the proccesor wake up a bit.
   gpsWakeup();  // Wakeup GPS to get a quick fix.
   SerialUSB.println("GPS is awake. MCU is going back to sleep.");
