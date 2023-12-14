@@ -1,4 +1,3 @@
-// Testing
 // Charles Nicholson, 2023
 // Code for a LoRa GPS tracker.
 // Meant to be used to track a high-altitude glider.
