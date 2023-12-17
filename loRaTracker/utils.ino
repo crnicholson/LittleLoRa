@@ -81,7 +81,7 @@ void gpsConfig() {
 
   if (setValueSuccess == true) {
     gps.saveConfiguration();
-#ifdef DEVMODE 
+#ifdef DEVMODE  
     SerialUSB.println("GPS Config Success!");
 #endif
   }
