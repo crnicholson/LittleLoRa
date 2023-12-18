@@ -83,6 +83,8 @@
 // - Add a temperature sensor
 // - A resistors to measure battery voltage
 // - Acquire and transmit speed and course
+// - Work on receiver to receive new information
+// - Make an app for the receiver
 
 #include "headers/settings.h"
 #include <ArduinoLowPower.h>
@@ -94,6 +96,7 @@
 struct __attribute__((packed)) dataStruct {
   float lat;
   float lon;
+  float volts;
   long alt; // These are longs to make keep the data types the same between the transmitter and the receiver. Converting to ints is getting worked on to make the payload shorter.
   long sats;
   long speed;
@@ -124,6 +127,8 @@ SFE_UBLOX_GNSS gps;
 void setup() {
   pinMode(WAKEUP_PIN, OUTPUT);
   digitalWrite(WAKEUP_PIN, LOW);
+
+  pinMode(BAT_VOLTAGE_PIN, INPUT);
 
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
@@ -231,6 +236,7 @@ void loop() {
   payload.txCount++;
 #endif
 
+  readVoltage();
   payload.txCount++;
 
 #ifdef DEVMODE
@@ -243,7 +249,7 @@ void loop() {
   // powerOffWithInterrupt uses the 16-byte version of RXM-PMREQ - supported by the M10 etc.
   // powerOffWithInterrupt allows us to set the force flag.
   // The M10 integration manual states: "The "force" flag must be set in UBX-RXM-PMREQ to enter software standby mode."
-  gps.powerOffWithInterrupt(30000, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true); // No (additional) wakeup sources. force = true.
+  gps.powerOffWithInterrupt(SLEEP_TIME * 3, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true); // No (additional) wakeup sources. force = true.
 
 #ifdef DEVMODE
   SerialUSB.print("Transmitting with a packet size of: ");

@@ -17,6 +17,12 @@ void shortPulse() {
   digitalWrite(LED, LOW);
 }
 
+void readVoltage() {
+  int rawVolt = analogRead(BAT_VOLTAGE_PIN);
+  rawVolt = rawVolt * 2;
+  payload.volts = rawVolt * (3.3 / 1023.0);
+}
+
 void displayData() {
   SerialUSB.print("Lat: ");
   SerialUSB.print(payload.lat, 9);
