@@ -1,2 +1,2 @@
 # littleLoRa
-Docs WIP. test
+Docs WIP.
