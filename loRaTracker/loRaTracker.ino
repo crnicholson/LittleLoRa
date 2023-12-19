@@ -79,10 +79,8 @@
 
 // ***** To-Do *****
 // - Documentation
-// - Make the longs into ints in the payload
 // - Add a temperature sensor
 // - Acquire and transmit speed and course
-// - Work on receiver to receive new information
 // - Make an app for the receiver
 
 #include "headers/settings.h"
