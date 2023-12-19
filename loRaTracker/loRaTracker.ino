@@ -81,7 +81,6 @@
 // - Documentation
 // - Make the longs into ints in the payload
 // - Add a temperature sensor
-// - A resistors to measure battery voltage
 // - Acquire and transmit speed and course
 // - Work on receiver to receive new information
 // - Make an app for the receiver
@@ -96,15 +95,15 @@
 struct __attribute__((packed)) dataStruct {
   float lat;
   float lon;
-  float volts;
-  long alt; // These are longs to make keep the data types the same between the transmitter and the receiver. Converting to ints is getting worked on to make the payload shorter.
-  long sats;
-  long speed;
-  long course;
-  long seconds;
-  long minutes;
-  long hours;
-  long txCount = 0;
+  short volts;
+  short alt; // These are longs to make keep the data types the same between the transmitter and the receiver. Converting to ints is getting worked on to make the payload shorter.
+  byte sats;
+  byte speed;
+  short course;
+  byte seconds;
+  byte minutes;
+  byte hours;
+  short txCount;
   char text[COMMENT_SIZE] = COMMENT;
 } payload;
 
@@ -152,7 +151,7 @@ void setup() {
   }
 
   LoRa.setSyncWord(SYNC_WORD);               // Defined in settings.h.
-  LoRa.setSpreadingFactor(SPREADING_FACTOR); // Defined in settings.h
+  LoRa.setSpreadingFactor(SPREADING_FACTOR); // Defined in settings.h.
   LoRa.setSignalBandwidth(BANDWIDTH);        // Defined in settings.h.
   LoRa.crc();                                // Get a checksum.
 

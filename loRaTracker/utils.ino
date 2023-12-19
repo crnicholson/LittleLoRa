@@ -45,7 +45,17 @@ void displayData() {
   SerialUSB.print(" Fix type: ");
   SerialUSB.print(fixType);
   SerialUSB.print(" Sats: ");
-  SerialUSB.println(payload.sats);
+  SerialUSB.print(payload.sats);
+  SerialUSB.print(" Transmissions: ");
+  SerialUSB.print(payload.txCount);
+  SerialUSB.print(" Voltage: ");
+  SerialUSB.print(payload.volts);
+  SerialUSB.print(" Speed: ");
+  SerialUSB.print(payload.speed);
+  SerialUSB.print(" Course: ");
+  SerialUSB.print(payload.course);
+  SerialUSB.print(" Comment: ");
+  SerialUSB.println(payload.comment);
 }
 
 void getData() {
