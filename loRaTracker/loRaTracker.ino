@@ -208,6 +208,7 @@ void setup() {
 
 void loop() {
   shortPulse();
+  readVoltage();
 #ifndef TEST_COORD
   payload.sats = 0;
   fixType = 0;
@@ -225,6 +226,8 @@ void loop() {
   }
 #endif
 
+  payload.txCount++;
+
 #ifdef TEST_COORD
   payload.lat = lat;
   payload.lon = lon;
@@ -232,11 +235,8 @@ void loop() {
   payload.sats = sats;
   payload.speed = speed;
   payload.course = course;
-  payload.txCount++;
+  displayData();
 #endif
-
-  readVoltage();
-  payload.txCount++;
 
 #ifdef DEVMODE
   SerialUSB.println("Entering GPS low power mode.");
@@ -248,7 +248,7 @@ void loop() {
   // powerOffWithInterrupt uses the 16-byte version of RXM-PMREQ - supported by the M10 etc.
   // powerOffWithInterrupt allows us to set the force flag.
   // The M10 integration manual states: "The "force" flag must be set in UBX-RXM-PMREQ to enter software standby mode."
-  gps.powerOffWithInterrupt(SLEEP_TIME * 3, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true); // No (additional) wakeup sources. force = true.
+  gps.powerOffWithInterrupt(sleepTime * 3, VAL_RXM_PMREQ_WAKEUPSOURCE_EXTINT0, true); // No (additional) wakeup sources. force = true.
 
 #ifdef DEVMODE
   SerialUSB.print("Transmitting with a packet size of: ");
@@ -263,7 +263,7 @@ void loop() {
   SerialUSB.println(" milliseconds. Now sleeping LoRa and sleeping MCU.");
 #endif
   LoRa.sleep(); // The LoRa module wakes up automatically when the SPI interface is active.
-  LowPower.deepSleep(SLEEP_TIME);
+  LowPower.deepSleep(sleepTime);
   gpsWakeup(); // Wakeup GPS.
 #ifdef DEVMODE
   SerialUSB.println("GPS and MCU are awake.");

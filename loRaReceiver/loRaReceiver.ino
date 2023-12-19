@@ -15,8 +15,8 @@
 // use any SX1278 module, such as the DRF1278F. Note that the pinout between
 // similar boards is different.
 // Wiring of the SX1278 module:
-// NSS of SX to ATN (CS, D38, physical pin 22).
-// Reset of SX to 5 (physical pin 24).
+// NSS of SX to ATN (CS, 10, physical pin 22).
+// Reset of SX to 6 (physical pin 24).
 // DIO0 of SX to 2 (physical pin 23).
 // VCC of SX to 3.3v.
 // GND of SX to GND.
@@ -40,7 +40,9 @@ struct __attribute__((packed)) dataStruct {
   byte hours;
   short txCount;
   char text[7];
-} payload;
+} receivedData;
+
+int rxCount;
 
 void setup() {
   Serial.begin(BAUD_RATE);
@@ -77,6 +79,8 @@ void loop() {
   int packetSize = LoRa.parsePacket(); // Parse packet.
   if (packetSize > 0) {
     LoRa.readBytes((byte *)&receivedData, sizeof(receivedData)); // Receive packet and put it into a struct.
+    float voltage = receivedData.volts / 100;
+    rxCount++;
 
     // Check if the packet is a valid packet.
     if (sizeof(receivedData) == packetSize) {

@@ -1,5 +1,5 @@
-#include "headers/settings.h"
 #include <Arduino.h>
+#include "headers/settings.h"
 
 void longPulse() {
   digitalWrite(LED, HIGH);
@@ -20,7 +20,7 @@ void shortPulse() {
 void readVoltage() {
   int rawVolt = analogRead(BAT_VOLTAGE_PIN);
   rawVolt = rawVolt * 2;
-  payload.volts = rawVolt * (3.3 / 1023.0);
+  payload.volts = rawVolt * (3.3 / 1023.0) * 100;
 }
 
 void displayData() {
@@ -55,7 +55,7 @@ void displayData() {
   SerialUSB.print(" Course: ");
   SerialUSB.print(payload.course);
   SerialUSB.print(" Comment: ");
-  SerialUSB.println(payload.comment);
+  SerialUSB.println(payload.text);
 }
 
 void getData() {
