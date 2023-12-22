@@ -1,12 +1,12 @@
+// Part of LittleLoRa.
+// loRaReceiver.ino.
 // Charles Nicholson, 2023.
-// Code for LittleLoRa tracker ground station receiver.
+// Code for a LoRa GPS tracker.
 // Meant to be used to track a high-altitude glider.
+// https://github.com/crnicholson/littleLoRa/.
 
-#include "headers/settings.h"
-#include <LoRa.h>
-#include <SPI.h>
-
-// NOTE: system operates at 433 mHz, so a ham radio license is needed in the US.
+// ***** NOTE *****
+// This system operates at 433 mHz, so a ham radio license is needed in the US.
 // Please check local regulations before use.
 
 // ***** LoRa *****
@@ -27,6 +27,10 @@
 // ***** To-Do *****
 // - Configure the 32 bit data types to work well with the 64 bit Python that is getting sent the data over Pyserial.
 
+#include "headers/settings.h"
+#include <LoRa.h>
+#include <SPI.h>
+
 struct __attribute__((packed)) dataStruct {
   float lat;
   float lon;
@@ -45,9 +49,11 @@ struct __attribute__((packed)) dataStruct {
 int rxCount;
 
 void setup() {
+#ifdef DEVMODE
   Serial.begin(BAUD_RATE);
   while (!Serial)
     ;
+#endif
 
 #ifdef DEVMODE
   Serial.println("LittleLoRa Receiver.");

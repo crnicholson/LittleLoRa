@@ -21,7 +21,7 @@ void displayData() {
   Serial.print(" Receptions: ");
   Serial.print(rxCount);
   Serial.print(" Voltage: ");
-  Serial.print(voltage);
+  Serial.print(receivedData.volts);
   Serial.print(" Speed: ");
   Serial.print(receivedData.speed);
   Serial.print(" Course: ");
