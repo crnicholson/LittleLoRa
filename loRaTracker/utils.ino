@@ -66,8 +66,8 @@ void getData() {
   payload.alt = gps.getAltitude();
   payload.alt = payload.alt / 1000;
   payload.sats = gps.getSIV();
-  payload.speed = 0;
-  payload.course = 0;
+  payload.speed = gps.getGroundSpeed();
+  payload.course = gps.getHeading();
   payload.seconds = gps.getSecond();
   payload.minutes = gps.getMinute();
   payload.hours = gps.getHour();
