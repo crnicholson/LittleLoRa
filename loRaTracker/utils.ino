@@ -1,5 +1,5 @@
-#include <Arduino.h>
 #include "headers/settings.h"
+#include <Arduino.h>
 
 void longPulse() {
   digitalWrite(LED, HIGH);
@@ -85,7 +85,7 @@ void gpsWakeup() {
   digitalWrite(WAKEUP_PIN, LOW);
 }
 
-void gpsConfig() {
+void gpsConfigPSM() {
   gps.factoryDefault(); // Clear any saved configuration
 
   bool setValueSuccess = true;
@@ -100,13 +100,13 @@ void gpsConfig() {
 
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_OPERATEMODE, 1);       // Setting to PSMOO.
   setValueSuccess &= gps.setVal32(UBLOX_CFG_PM_POSUPDATEPERIOD, 60); // Wakes up every ~30 seconds to get a fix in PSMOO mode.
-  setValueSuccess &= gps.setVal32(UBLOX_CFG_PM_ACQPERIOD, 10);       // 10 seconds between aquicistion attempts if no fix after MAXACQTIME. Ignored because DONOTENTEROFF is true.
+  setValueSuccess &= gps.setVal32(UBLOX_CFG_PM_ACQPERIOD, 10);       // 10 seconds between acquisition attempts if no fix after MAXACQTIME. Ignored because DONOTENTEROFF is true.
   setValueSuccess &= gps.setVal16(UBLOX_CFG_PM_ONTIME, 0);           // Set to go straight to low power mode after fix.
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_MINACQTIME, 5);        // Spend at least 5 seconds getting a fix even if the signal is bad. Ignored because DONOTENTEROFF is true.
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_MAXACQTIME, 15);       // Spend at maximum 15 seconds getting a fix. Ignored because DONOTENTEROFF is true.
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_DONOTENTEROFF, 1);     // GPS won't go to low power mode if there is no fix.
-  setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_WAITTIMEFIX, 1);       // In the acquistion phase, a time fix is waited for.
-  setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_UPDATEEPH, 1);         // Update the ephemeris (satelitte data) regularly.
+  setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_WAITTIMEFIX, 1);       // In the acquisition phase, a time fix is waited for.
+  setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_UPDATEEPH, 1);         // Update the ephemeris (satellite data) regularly.
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_EXTINTBACKUP, 0);      // Disable EXTINT backup.
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_EXTINTWAKE, 0);        // Disable EXTINT wake.
   setValueSuccess &= gps.setVal8(UBLOX_CFG_PM_EXTINTINACTIVE, 0);    // Disable EXTINT active.
@@ -120,6 +120,19 @@ void gpsConfig() {
   } else {
 #ifdef DEVMODE
     SerialUSB.println("GPS Config Failed!");
+#endif
+  }
+}
+
+void gpsConfig() {
+  gps.factoryDefault();                                                        // Clear any saved configuration.
+  if (gps.setDynamicModel(DYN_MODEL_AIRBORNE1g, VAL_LAYER_RAM_BBR) == false) { // Set the dynamic model to airborne mode with one g of thrust allowance. 
+#ifdef DEVMODE
+    SerialUSB.println(F("*** Warning: setDynamicModel failed ***"));
+#endif
+  } else {
+#ifdef DEVMODE
+    SerialUSB.println(F("Dynamic platform model changed successfully!"));
 #endif
   }
 }

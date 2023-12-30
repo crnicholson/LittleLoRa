@@ -181,13 +181,15 @@ void setup() {
   }
 #endif
 
+  gpsConfig();
+
   // Following commented out code allows for use of PSMOO (or PSMCT with some edits).
   // PSMOO allows for predefined periodic wakeup of the GPS receiver to get a fix, then go into backup mode.
   // PSMCT allows for the GPS to get a fix, then go into Power Efficient Tracking (POT) state. This is good for trackers that transmit a lot.
   // To use either PSMCT or PSMOO, you can remove the wait-for-fix code and the software backup part. Uncomment the lines below, too.
   // You may need to do more editing of the code to achieve your desired outcome, as this has not been tested yet.
   /*
-    gpsConfig();
+    gpsConfigPSM();
 
     uint8_t PSM;
 
