@@ -1,3 +1,5 @@
+// Work in progress, code is faulty and non-functional right now.
+
 // Part of LittleLoRa.
 // loRaTracker.ino.
 // Charles Nicholson, 2023.
